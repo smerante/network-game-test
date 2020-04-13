@@ -11,80 +11,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smerante.network.game.test.controllers.PlayerController;
+import com.smerante.network.game.test.models.Player;
+import com.smerante.network.game.test.models.Players;
 
 import java.util.ArrayList;
 import java.util.PriorityQueue;
-
-class Players {
-    private ArrayList<Player> players;
-
-    public Players() {
-        this.players = new ArrayList<Player>();
-    }
-
-    public ArrayList<Player> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(ArrayList<Player> players) {
-        this.players = players;
-    }
-
-    public void addPlayer(Player player) {
-        this.players.add(player);
-    }
-}
-
-
-class Player {
-    float pX, pY, pVX, pVY;
-    int playerID;
-
-    public float getpX() {
-        return pX;
-    }
-
-    public void setpX(float pX) {
-        this.pX = pX;
-    }
-
-    public float getpY() {
-        return pY;
-    }
-
-    public void setpY(float pY) {
-        this.pY = pY;
-    }
-
-    public float getpVX() {
-        return pVX;
-    }
-
-    public void setpVX(float pVX) {
-        this.pVX = pVX;
-    }
-
-    public float getpVY() {
-        return pVY;
-    }
-
-    public void setpVY(float pVY) {
-        this.pVY = pVY;
-    }
-
-    public int getPlayerID() {
-        return playerID;
-    }
-
-    public void setPlayerID(int playerID) {
-        this.playerID = playerID;
-    }
-
-    @Override
-    public String toString() {
-        return "Player [pX=" + pX + ", pY=" + pY + ", pVX=" + pVX + ", pVY=" + pVY + ", playerID=" + playerID + "]";
-    }
-}
 
 public class Source extends Game implements Screen, InputProcessor {
     public static int screenW = 1500, screenH = 800;
@@ -124,7 +56,7 @@ public class Source extends Game implements Screen, InputProcessor {
     }
 
     void connectToServer() {
-        ClientSideController.addPlayer("http://localhost:8080/add-player", this.player);
+        PlayerController.addPlayer("http://localhost:8080/add-player", this.player);
     }
 
     void update(float delta) {
@@ -150,12 +82,12 @@ public class Source extends Game implements Screen, InputProcessor {
 
     void sendPlayerState() {
 //        System.out.println("send player state to update players");
-        ClientSideController.updatePlayerState(player);
+        PlayerController.updatePlayerState(player);
     }
 
     void retrieveOtherPlayerStates() {
 //        System.out.println("Retrieve updated player states");
-        ClientSideController.getOtherPlayers();
+        PlayerController.getOtherPlayers();
     }
 
     void updateOtherPlayerInformation() {
@@ -210,11 +142,11 @@ public class Source extends Game implements Screen, InputProcessor {
         shapes.set(ShapeType.Filled);
         shapes.setColor(playerColor);
         if (player.getPlayerID() >= 0) {
-            shapes.rect(player.pX, player.pY, 10, 10);
+            shapes.rect(player.getpX(), player.getpY(), 10, 10);
             shapes.setColor(otherPlayersColor);
             for (Player otherPlayer : players.getPlayers()) {
                 if (otherPlayer.getPlayerID() != player.getPlayerID()) {
-                    shapes.rect(otherPlayer.pX, otherPlayer.pY, 10, 10);
+                    shapes.rect(otherPlayer.getpX(), otherPlayer.getpY(), 10, 10);
                 }
             }
         }
