@@ -11,7 +11,6 @@ import com.smerante.network.game.test.models.Player;
  * Created by Sam Merante on 2020-04-13.
  */
 public class PlayerController {
-
     public static void addPlayer(String url, Player player) {
         final String[] response = new String[1];
 
@@ -61,7 +60,6 @@ public class PlayerController {
         });
     }
 
-
     public static void updatePlayerState(Player player) {
         final String[] response = new String[1];
 
@@ -75,7 +73,6 @@ public class PlayerController {
             Gdx.net.sendHttpRequest(httpPost, new Net.HttpResponseListener() {
                 public void handleHttpResponse(Net.HttpResponse httpResponse) {
                     response[0] = httpResponse.getResultAsString();
-//                    Source.playerResQueue.add(response[0]);
                 }
 
                 public void failed(Throwable t) {

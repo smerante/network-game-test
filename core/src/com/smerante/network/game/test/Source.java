@@ -15,6 +15,7 @@ import com.smerante.network.game.test.controllers.PlayerController;
 import com.smerante.network.game.test.models.Player;
 import com.smerante.network.game.test.models.Players;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
@@ -25,7 +26,6 @@ public class Source extends Game implements Screen, InputProcessor {
     Color playerColor, otherPlayersColor;
     Players players;
     Player player;
-    float pVX, pVY = 0;
     float updateTicker = 0;
     public static PriorityQueue<String> playerResQueue = new PriorityQueue<>();
     public static PriorityQueue<String> otherPlayersResQueue = new PriorityQueue<>();
@@ -65,14 +65,10 @@ public class Source extends Game implements Screen, InputProcessor {
         updateTicker += delta;
 
         if (this.updateTicker >= 0.1) {
-            if (player.getPlayerID() >= 0) //If the players connected
-                updateServer();
             retrieveOtherPlayerStates();
             updateTicker = 0;
         }
-
         updateClient(delta);
-
         if (!playerResQueue.isEmpty()) { //Right now this is only being updated once
             this.updatePlayerInformation();
         }
@@ -97,6 +93,9 @@ public class Source extends Game implements Screen, InputProcessor {
                     try {
                         Players updatedPlayers = mapper.readValue(response, Players.class);
                         playerActions.add(updatedPlayers);
+                        if (players.getPlayers().size() != updatedPlayers.getPlayers().size()) {
+                            players.setPlayers(updatedPlayers.getPlayers());
+                        }
                     } catch (Exception e) {
                         System.out.println("Got exception: " + e);
                     }
@@ -104,6 +103,7 @@ public class Source extends Game implements Screen, InputProcessor {
             }
         }).start();
     }
+
 
     void updatePlayerInformation() {
         new Thread(new Runnable() {
@@ -120,23 +120,29 @@ public class Source extends Game implements Screen, InputProcessor {
     }
 
     void updateClient(float delta) {
-        player.setpVX(pVX * delta);
-        player.setpVY(pVY * delta);
-        player.setpX(player.getpX() + player.getpVX());
-        player.setpY(player.getpY() + player.getpVY());
-        for (Player p : this.players.getPlayers()) {
-            if (p.getPlayerID() != this.player.getPlayerID()) {
-                System.out.println("Other players vX: " + p.getpVX());
-                p.setpX(p.getpX() + p.getpVX());
-                p.setpY(p.getpY() + p.getpVY());
+        player.setpX(player.getpX() + player.getpVX() * delta);
+        player.setpY(player.getpY() + player.getpVY() * delta);
+
+
+        if (!playerActions.isEmpty()) {
+            ArrayList<Player> updatePlayerActions = playerActions.poll().getPlayers();
+            for (int i = 0; i < players.getPlayers().size(); i++) {
+                if (players.getPlayers().get(i).getpVX() != updatePlayerActions.get(i).getpVX()) {
+                    players.getPlayers().get(i).setpX(updatePlayerActions.get(i).getpX());
+                    players.getPlayers().get(i).setpVX(updatePlayerActions.get(i).getpVX());
+                }
+                if (players.getPlayers().get(i).getpVY() != updatePlayerActions.get(i).getpVY()) {
+                    players.getPlayers().get(i).setpY(updatePlayerActions.get(i).getpY());
+                    players.getPlayers().get(i).setpVY(updatePlayerActions.get(i).getpVY());
+                }
             }
         }
-        if (playerActions.size() > 1) {
-            Players updatedPlayerActions = playerActions.poll();
-            System.out.println("checking from playerActions: " + updatedPlayerActions);
 
-            ArrayList<Player> updatedPlayers = updatedPlayerActions.getPlayers();
-            this.players.setPlayers(updatedPlayers);
+        for (Player p : players.getPlayers()) {
+            if (p.getPlayerID() != this.player.getPlayerID()) {
+                p.setpX(p.getpX() + p.getpVX() * delta);
+                p.setpY(p.getpY() + p.getpVY() * delta);
+            }
         }
     }
 
@@ -168,22 +174,24 @@ public class Source extends Game implements Screen, InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.D)
-            pVX = 100;
+            player.setpVX(100);
         if (keycode == Input.Keys.A)
-            pVX = -100;
+            player.setpVX(-100);
         if (keycode == Input.Keys.S)
-            pVY = -100;
+            player.setpVY(-100);
         if (keycode == Input.Keys.W)
-            pVY = 100;
+            player.setpVY(100);
+        updateServer();
         return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
         if (keycode == Input.Keys.D || keycode == Input.Keys.A)
-            pVX = 0;
+            player.setpVX(0);
         if (keycode == Input.Keys.S || keycode == Input.Keys.W)
-            pVY = 0;
+            player.setpVY(0);
+        updateServer();
         return false;
     }
 

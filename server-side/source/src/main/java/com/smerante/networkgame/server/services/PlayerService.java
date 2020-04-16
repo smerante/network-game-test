@@ -31,10 +31,8 @@ public class PlayerService {
 	}
 	
 	public void updatePlayerState(Player player) {
-		float x = player.getpX() + player.getpVX();
-		float y = player.getpY() + player.getpVY();
-		this.players.getPlayers().get(player.getPlayerID()).setpX(x);
-		this.players.getPlayers().get(player.getPlayerID()).setpY(y);
+		this.players.getPlayers().get(player.getPlayerID()).setpX(player.getpX());
+		this.players.getPlayers().get(player.getPlayerID()).setpY(player.getpY());
 		this.players.getPlayers().get(player.getPlayerID()).setpVX(player.getpVX());
 		this.players.getPlayers().get(player.getPlayerID()).setpVY(player.getpVY());
 		
