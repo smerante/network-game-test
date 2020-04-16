@@ -21,7 +21,6 @@ public class PlayerController {
         ObjectMapper mapper = new ObjectMapper();
         try {
             String playerPayload = mapper.writeValueAsString(player);
-            System.out.println("Sending post to " + url + " with :" + playerPayload);
             httpPost.setContent(playerPayload);
             Gdx.net.sendHttpRequest(httpPost, new Net.HttpResponseListener() {
                 public void handleHttpResponse(Net.HttpResponse httpResponse) {

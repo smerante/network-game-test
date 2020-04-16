@@ -20,7 +20,13 @@ public class PlayerController {
 	private PlayerService playerService;
 
 	@RequestMapping(value = "/get-players", method = RequestMethod.GET)
-	public Players helloWorld() {
+	public Players getPlayers() {
+		return playerService.getPlayers();
+	}
+	
+	@RequestMapping(value = "/clear-players", method = RequestMethod.GET)
+	public Players clearPlayers() {
+		this.playerService.getPlayers().getPlayers().clear();
 		return playerService.getPlayers();
 	}
 

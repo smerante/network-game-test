@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 public class Source extends Game implements Screen, InputProcessor {
-    public static int screenW = 1500, screenH = 800;
+    public static int screenW = 500, screenH = 500;
     SpriteBatch batch;
     ShapeRenderer shapes;
     Color playerColor, otherPlayersColor;
@@ -29,6 +29,8 @@ public class Source extends Game implements Screen, InputProcessor {
     float updateTicker = 0;
     public static PriorityQueue<String> playerResQueue = new PriorityQueue<>();
     public static PriorityQueue<String> otherPlayersResQueue = new PriorityQueue<>();
+
+    PriorityQueue<Players> playerActions;
 
     @Override
     public void create() {
@@ -48,7 +50,7 @@ public class Source extends Game implements Screen, InputProcessor {
         player.setpX(screenW / 2);
         player.setpY(screenH / 2);
         player.setPlayerID(-1);
-
+        playerActions = new PriorityQueue<>();
         playerColor = new Color(0, 0, 0, 1);
         otherPlayersColor = new Color(1, 0, 0, 1);
 
@@ -60,49 +62,44 @@ public class Source extends Game implements Screen, InputProcessor {
     }
 
     void update(float delta) {
-//        updateTicker += delta;
+        updateTicker += delta;
 
-//        if (this.updateTicker >= 0.1) {
-            if(player.getPlayerID() >= 0)
-                sendPlayerState();
+        if (this.updateTicker >= 0.1) {
+            if (player.getPlayerID() >= 0) //If the players connected
+                updateServer();
             retrieveOtherPlayerStates();
-//            updateTicker = 0;
-//        }
+            updateTicker = 0;
+        }
 
-        updateClientPlayer(delta);
+        updateClient(delta);
 
-        if (!playerResQueue.isEmpty()) {
+        if (!playerResQueue.isEmpty()) { //Right now this is only being updated once
             this.updatePlayerInformation();
         }
 
-        if (!otherPlayersResQueue.isEmpty()) {
-            this.updateOtherPlayerInformation();
-        }
+        this.updateOtherPlayerInformation();
     }
 
-    void sendPlayerState() {
-//        System.out.println("send player state to update players");
+    void updateServer() {
         PlayerController.updatePlayerState(player);
     }
 
     void retrieveOtherPlayerStates() {
-//        System.out.println("Retrieve updated player states");
         PlayerController.getOtherPlayers();
     }
 
     void updateOtherPlayerInformation() {
         new Thread(new Runnable() {
             public void run() {
-                String response = otherPlayersResQueue.poll();
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-//                    System.out.println("got other players state response: " + response);
-                    Players updatedPlayers = mapper.readValue(response, Players.class);
-//                    System.out.println("Got updated players: " + updatedPlayers);
-                    players.setPlayers(updatedPlayers.getPlayers());
-//                    System.out.println(players.getPlayers());
-                } catch (Exception e) {
-//                    System.out.println(e);
+                if (!otherPlayersResQueue.isEmpty()) {
+                    String response = otherPlayersResQueue.poll();
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        Players updatedPlayers = mapper.readValue(response, Players.class);
+                        playerActions.add(updatedPlayers);
+                    } catch (Exception e) {
+                        System.out.println("Got exception: " + e);
+                    }
                 }
             }
         }).start();
@@ -114,21 +111,33 @@ public class Source extends Game implements Screen, InputProcessor {
                 String response = playerResQueue.poll();
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-//                    System.out.println("got player update response: " + response);
                     Player updatedPlayer = mapper.readValue(response, Player.class);
                     player = updatedPlayer;
                 } catch (Exception e) {
-//                    System.out.println(e);
                 }
             }
         }).start();
     }
 
-    void updateClientPlayer(float delta) {
+    void updateClient(float delta) {
         player.setpVX(pVX * delta);
         player.setpVY(pVY * delta);
         player.setpX(player.getpX() + player.getpVX());
         player.setpY(player.getpY() + player.getpVY());
+        for (Player p : this.players.getPlayers()) {
+            if (p.getPlayerID() != this.player.getPlayerID()) {
+                System.out.println("Other players vX: " + p.getpVX());
+                p.setpX(p.getpX() + p.getpVX());
+                p.setpY(p.getpY() + p.getpVY());
+            }
+        }
+        if (playerActions.size() > 1) {
+            Players updatedPlayerActions = playerActions.poll();
+            System.out.println("checking from playerActions: " + updatedPlayerActions);
+
+            ArrayList<Player> updatedPlayers = updatedPlayerActions.getPlayers();
+            this.players.setPlayers(updatedPlayers);
+        }
     }
 
     @Override

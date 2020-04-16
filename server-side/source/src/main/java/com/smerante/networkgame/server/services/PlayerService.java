@@ -35,6 +35,9 @@ public class PlayerService {
 		float y = player.getpY() + player.getpVY();
 		this.players.getPlayers().get(player.getPlayerID()).setpX(x);
 		this.players.getPlayers().get(player.getPlayerID()).setpY(y);
+		this.players.getPlayers().get(player.getPlayerID()).setpVX(player.getpVX());
+		this.players.getPlayers().get(player.getPlayerID()).setpVY(player.getpVY());
+		
 	}
 
 }
